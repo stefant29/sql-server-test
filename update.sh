@@ -2,8 +2,43 @@
 
 history=".history"
 database="LORIKEET_MASTER"
+file=".env"
+
+####################################
+
+if [ ! -f "$file" ]
+then
+	echo 'What is your computer name?'
+	read computer_name
+	
+	echo 'What is name of the running instance of SQL Server? (default SQLEXPRESS)'
+	read sql_instance_name
+
+	echo "$computer_name\\$sql_instance_name" >> $file
+
+	echo 'What is the username? (default sa)'
+	read username
+	echo $username >> $file
+
+	echo 'What is the password for $username ? (default pl1nt3ch)'
+	read password
+	echo $password >> $file
+fi
+
+####################################
+
+
+while read -r computer_name_sql_instance_name; do
+    read -r user;
+    read -r password;
+    break
+done < "$file"
+
+####################################
 
 echo "Looking for new scripts...";
+
+####################################
 
 ls -f $database | 
 	while read -r file_name;
@@ -29,10 +64,12 @@ ls -f $database |
 
 			if "$run_script"; then
 				echo "Script $file_name not found in the history. Running it NOW!";
-				sqlcmd -S S\\SQLEXPRESS -U sa -P pl1nt3ch -i "$database/$file_name"
+				sqlcmd -S "$computer_name_sql_instance_name" -U "$user" -P "$password" -i "$database/$file_name"
 				echo "$file_name" >> "$database/$history"
 			fi
 	done
+
+####################################
 
 echo "Press any key to close.."
 read
